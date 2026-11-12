@@ -1,10 +1,25 @@
 import axios from "axios";
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const DEFAULT_PROD_API_URL = "https://drishti360-api.onrender.com";
+const DEFAULT_DEV_API_URL = "http://localhost:8000";
+
+function resolveApiBaseUrl() {
+  const configured = (import.meta.env.VITE_API_BASE_URL || "").trim().replace(/\/+$/, "");
+  const isBrowser = typeof window !== "undefined";
+  const isLocalHost =
+    isBrowser && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+  if (configured && !( !isLocalHost && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configured) )) {
+    return configured;
+  }
+  return isLocalHost || import.meta.env.DEV ? DEFAULT_DEV_API_URL : DEFAULT_PROD_API_URL;
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 25000,
+  timeout: 65000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -15,14 +30,31 @@ apiClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  if (config.data instanceof FormData) {
+    delete config.headers["Content-Type"];
+  }
   return config;
 });
 
 apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    const message =
-      error.response?.data?.detail || error.message || "Network or server error";
+    if (error.code === "ECONNABORTED") {
+      return Promise.reject(
+        new Error("Backend server is waking up or timed out. Please retry in a few seconds.")
+      );
+    }
+    if (!error.response) {
+      return Promise.reject(
+        new Error(
+          `Network Error: Unable to reach API (${API_BASE_URL}). Verify the backend is awake and CORS allows this origin.`
+        )
+      );
+    }
+    const detail = error.response?.data?.detail;
+    const message = Array.isArray(detail)
+      ? detail.map((d) => d?.msg || JSON.stringify(d)).join("; ")
+      : detail || error.message || "Server request failed.";
     return Promise.reject(new Error(message));
   }
 );

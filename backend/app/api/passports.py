@@ -146,7 +146,7 @@ def _issue_passport_for_batch(db: Session, batch: CropBatch) -> DigitalPassport:
     )
 
     passport_id = generate_code("DR360-PSP")
-    verify_url = f"{settings.PUBLIC_VERIFY_BASE_URL}/{passport_id}"
+    verify_url = f"{settings.effective_public_verify_base_url}/{passport_id}"
     qr_path = generate_passport_qr(passport_id, verify_url)
 
     p = DigitalPassport(

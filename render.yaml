@@ -28,10 +28,10 @@ services:
           name: drishti360-db
           property: connectionString
       - key: FRONTEND_URL
-        sync: false
+        value: https://frontend-delta-ecru-38.vercel.app
       - key: CORS_ORIGINS
-        sync: false
+        value: https://frontend-delta-ecru-38.vercel.app
       - key: PUBLIC_VERIFY_BASE_URL
-        sync: false
+        value: https://frontend-delta-ecru-38.vercel.app/verify
       - key: AGMARKNET_API_KEY
         sync: false

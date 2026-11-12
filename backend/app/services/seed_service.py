@@ -310,7 +310,7 @@ def seed_foundation_data(db: Session) -> None:
         db.flush()
 
         if psp_id:
-            verify_url = f"{settings.PUBLIC_VERIFY_BASE_URL}/{psp_id}"
+            verify_url = f"{settings.effective_public_verify_base_url}/{psp_id}"
             qr_path = generate_passport_qr(psp_id, verify_url)
             psp = DigitalPassport(
                 passport_id=psp_id,
@@ -382,3 +382,22 @@ def seed_foundation_data(db: Session) -> None:
                 db.flush()
 
     db.commit()
+
+
+def sync_production_passport_urls(db: Session) -> None:
+    """Upgrade seeded localhost QR verification URLs to public production URL when running in production."""
+    base = settings.effective_public_verify_base_url
+    if "localhost" in base or "127.0.0.1" in base:
+        return
+    rows = db.query(DigitalPassport).all()
+    changed = False
+    for p in rows:
+        url = (p.qr_verification_url or "").strip()
+        if p.batch and (url.startswith("http://localhost") or url.startswith("http://127.0.0.1")):
+            new_url = f"{base}/{p.passport_id}"
+            p.qr_verification_url = new_url
+            p.passport_hash = compute_sha256(build_passport_hash_payload(p, p.batch.batch_id))
+            p.qr_image_path = generate_passport_qr(p.passport_id, new_url)
+            changed = True
+    if changed:
+        db.commit()

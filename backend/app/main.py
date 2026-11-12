@@ -6,7 +6,7 @@ from app.api import api_router
 from app.core.config import UPLOAD_DIR, settings
 from app.core.exceptions import register_exception_handlers
 from app.database.session import Base, SessionLocal, engine
-from app.services.seed_service import seed_foundation_data
+from app.services.seed_service import seed_foundation_data, sync_production_passport_urls
 
 show_docs = settings.ENABLE_DOCS and (not settings.is_production)
 app = FastAPI(
@@ -47,6 +47,7 @@ def on_startup():
     db = SessionLocal()
     try:
         seed_foundation_data(db)
+        sync_production_passport_urls(db)
     finally:
         db.close()
     try:

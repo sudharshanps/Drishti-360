@@ -9,11 +9,18 @@ from app.services.trace_helper import record_traceability_event
 router = APIRouter(prefix="/traceability", tags=["Traceability Ledger"])
 
 
-@router.get("/{batch_id}")
-def get_traceability(batch_id: int, db: Session = Depends(get_db)):
-    batch = db.query(CropBatch).filter(CropBatch.id == batch_id).first()
+def _find_batch_by_ref(db: Session, batch_ref: str) -> CropBatch:
+    batch = db.query(CropBatch).filter(CropBatch.batch_id == batch_ref).first()
+    if not batch and batch_ref.isdigit():
+        batch = db.query(CropBatch).filter(CropBatch.id == int(batch_ref)).first()
     if not batch:
         raise HTTPException(status_code=404, detail="Crop batch not found.")
+    return batch
+
+
+@router.get("/{batch_ref}")
+def get_traceability(batch_ref: str, db: Session = Depends(get_db)):
+    batch = _find_batch_by_ref(db, batch_ref)
 
     events = (
         db.query(TraceabilityEvent)
@@ -61,15 +68,13 @@ def get_traceability(batch_id: int, db: Session = Depends(get_db)):
     }
 
 
-@router.post("/{batch_id}/events")
+@router.post("/{batch_ref}/events")
 def add_traceability_stage_event(
-    batch_id: int,
+    batch_ref: str,
     payload: TraceabilityEventCreateRequest,
     db: Session = Depends(get_db),
 ):
-    batch = db.query(CropBatch).filter(CropBatch.id == batch_id).first()
-    if not batch:
-        raise HTTPException(status_code=404, detail="Crop batch not found.")
+    batch = _find_batch_by_ref(db, batch_ref)
 
     ev = record_traceability_event(
         db=db,

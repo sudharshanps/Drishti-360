@@ -35,8 +35,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "drishti360-dev-secret-key"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
-    FRONTEND_URL: str = ""
-    CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+    FRONTEND_URL: str = "https://frontend-delta-ecru-38.vercel.app"
+    CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173,https://frontend-delta-ecru-38.vercel.app"
     PUBLIC_VERIFY_BASE_URL: str = "http://localhost:5173/verify"
     AGMARKNET_API_KEY: str = ""
     UPLOAD_DIR: str = ""
@@ -58,12 +58,29 @@ class Settings(BaseSettings):
         return self.APP_ENV.strip().lower() == "production"
 
     @property
+    def effective_public_verify_base_url(self) -> str:
+        raw = (self.PUBLIC_VERIFY_BASE_URL or "").strip().rstrip("/")
+        if raw and not (self.is_production and "localhost" in raw):
+            return raw
+        if self.FRONTEND_URL.strip() and not (self.is_production and "localhost" in self.FRONTEND_URL):
+            return f"{self.FRONTEND_URL.strip().rstrip('/')}/verify"
+        return "https://frontend-delta-ecru-38.vercel.app/verify" if self.is_production else "http://localhost:5173/verify"
+
+    @property
     def cors_origin_list(self) -> List[str]:
-        origins = [o.strip().rstrip("/") for o in self.CORS_ORIGINS.split(",") if o.strip()]
-        if self.FRONTEND_URL.strip():
-            fe = self.FRONTEND_URL.strip().rstrip("/")
-            if fe not in origins:
-                origins.append(fe)
+        origins = [
+            o.strip().rstrip("/")
+            for o in self.CORS_ORIGINS.split(",")
+            if o.strip() and o.strip() != "*"
+        ]
+        for extra in (
+            self.FRONTEND_URL.strip().rstrip("/"),
+            "https://frontend-delta-ecru-38.vercel.app",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ):
+            if extra and extra != "*" and extra not in origins:
+                origins.append(extra)
         return origins
 
 
