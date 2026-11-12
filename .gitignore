@@ -1,0 +1,54 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+*.pem
+*.key
+
+# Python & Virtual Environments
+backend/.venv/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# Node & Frontend Builds
+frontend/node_modules/
+node_modules/
+frontend/dist/
+frontend/.vite/
+dist/
+*.tsbuildinfo
+
+# Local SQLite Databases & Runtime Uploads
+backend/*.db
+backend/*.sqlite
+backend/*.sqlite3
+*.db
+backend/uploads/crops/*
+backend/uploads/labels/*
+backend/uploads/qrcodes/*
+!backend/uploads/crops/.gitkeep
+!backend/uploads/labels/.gitkeep
+!backend/uploads/qrcodes/.gitkeep
+
+# Temporary Local Test / Verification Scripts
+backend/test_flagships.py
+backend/test_foundation.py
+backend/test_ppt_features.py
+
+# OS & Editor Artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
