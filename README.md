@@ -315,6 +315,11 @@ Potential hosting configuration:
 | Database | Managed PostgreSQL |
 | File Storage | Cloud Object Storage |
 
+### Cloud & Local Setup Guides
+- **Frontend (Vercel):** Config in `frontend/vercel.json` (SPA fallback for `/verify/:passportId` and `/app/*`). Set Root Directory = `frontend`, Env = `VITE_API_BASE_URL=https://<your-render-backend>.onrender.com`.
+- **Backend & PostgreSQL (Render Blueprint):** Config in `render.yaml` and `backend/Dockerfile` (`/api/health` healthcheck). Connect `sudharshanps/Drishti-360` and configure `FRONTEND_URL`, `CORS_ORIGINS`, and `PUBLIC_VERIFY_BASE_URL`.
+- **Docker Compose:** Copy `.env.example` to `.env` and run `docker compose up --build -d`.
+
 Deployment URLs will be added after successful production deployment.
 
 ---
